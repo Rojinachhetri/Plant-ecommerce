@@ -3,29 +3,45 @@ session_start();
 require "./includes/head.php";
 require './includes/conn.php';
 
+// Check if user is logged in
 if (!isset($_SESSION['email'])) {
-  echo "<script> location.href='/plant'; </script>";
-  exit();
+    echo "<script> location.href='/plant'; </script>";
+    exit();
 }
-?>
 
-<?php
 $user_id = $_SESSION['user_id'];
-$query = 'SELECT * FROM customers';
-$query = 'SELECT products.price, products.id, products.title, products.image, cart.qty 
-          FROM cart, products 
-          WHERE products.id = cart.product_id 
-          AND cart.user_id="' . $user_id . '"';
+
+// Construct the SQL query using a JOIN
+$query = "SELECT products.price, products.id, products.title, products.image, cart.qty
+          FROM cart
+          INNER JOIN products ON products.id = cart.product_id 
+          WHERE cart.user_id = '$user_id'";
+
 $result = mysqli_query($con, $query);
-while ($row = mysqli_fetch_array($result)) {
-    $order = "INSERT INTO `orders`(`product_id`, `user_id`, `product_qty`, `order_amount`, `status`, `customer_id`) 
-              VALUES (" . $row['id'] . "," . $user_id . "," . $row['qty'] . "," . ($row['price'] * $row['qty'] + 49) . ", 'Confirmed', " . $row['$customer_id'] . ")";
-    $answer = mysqli_query($con, $order);
 
+if (!$result) {
+    die('Error: ' . mysqli_error($con)); // Print error message if query fails
 }
+
+while ($row = mysqli_fetch_array($result)) {
+    $product_id = mysqli_real_escape_string($con, $row['id']);
+    $product_qty = mysqli_real_escape_string($con, $row['qty']);
+    $order_amount = ($row['price'] * $row['qty']) + 49;
+
+    // Prepare the customer_id value
+    $customer_id = isset($row['customer_id']) ? "'" . mysqli_real_escape_string($con, $row['customer_id']) . "'" : "NULL";
+
+    // Insert order into orders table
+    $order_query = "INSERT INTO `orders`(`product_id`, `user_id`, `product_qty`, `order_amount`, `status`, `customer_id`) 
+                    VALUES ('$product_id', '$user_id', '$product_qty', '$order_amount', 'Confirmed', $customer_id)";
+    $order_result = mysqli_query($con, $order_query);
+
+    if (!$order_result) {
+        die('Error: ' . mysqli_error($con)); // Print error message if order insertion fails
+    }
+}
+
 ?>
-
-
 
 
 <section class="breadcrumb breadcrumb_bg">
@@ -123,7 +139,7 @@ while ($row = mysqli_fetch_array($result)) {
             </thead>
             <tbody>
               <?php
-              $allOrders = "SELECT orders.id, orders.order_date ,products.title, orders.product_qty, orders.order_amount, orders.status from orders, products where user_id='$user_id' and orders.product_id=products.id";
+              $allOrders = "SELECT orders.id, orders.order_date ,products.title, orders.product_qty, orders.order_amount, orders.status, customers.customer_id , customers.full_name from orders, products, customers where user_id='$user_id' and orders.product_id=products.id";
               $orderresult = mysqli_query($con, $allOrders);
               while($row = mysqli_fetch_array($orderresult)){
                 echo '<tr>
@@ -133,6 +149,8 @@ while ($row = mysqli_fetch_array($result)) {
                         <th>'.$row['product_qty'].'</th>
                         <th> <span>Rs. '.$row['order_amount'].'</span></th>
                         <th> <span>'.$row['status'].'</span></th>
+                        <th> <span>'.$row['customer_id'].'</span></th>
+                        <th> <span>'.$row['full_name'].'</span></th>
                       </tr>';
               }
               ?>

@@ -3,10 +3,10 @@ require 'includes/conn.php';
 
 session_start();
 
-if (!isset($_SESSION['admin_email'])) {
-    echo "<script> location.href='/Plant/admin/login.php'; </script>";
-    exit();
-}
+// if (!isset($_SESSION['admin_email'])) {
+//     echo "<script> location.href='/Plant/admin/login.php'; </script>";
+//     exit();
+// }
 require "includes/header.php";
 ?>
 <div class="mainContainer">
@@ -44,7 +44,7 @@ require "includes/header.php";
                      customers.full_name, customers.address
                      FROM `orders`, `products`, `customers` 
                      WHERE orders.product_id = products.id
-                     AND orders.customer_id = customers.customer_id 
+                    --  AND orders.customer_id = customers.customer_id 
                      ORDER BY id';
                     
                     $result = mysqli_query($conn, $query);
