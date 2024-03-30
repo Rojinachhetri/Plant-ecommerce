@@ -3,10 +3,10 @@ require 'includes/conn.php';
 
 session_start();
 
-// if (!isset($_SESSION['admin_email'])) {
-//     echo "<script> location.href='/Plant/admin/login.php'; </script>";
-//     exit();
-// }
+if (!isset($_SESSION['admin_email'])) {
+    echo "<script> location.href='/Plant/admin/login.php'; </script>";
+    exit();
+}
 require "includes/header.php";
 ?>
 <div class="mainContainer">
